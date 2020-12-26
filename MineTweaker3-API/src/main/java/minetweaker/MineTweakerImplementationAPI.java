@@ -621,14 +621,33 @@ public class MineTweakerImplementationAPI {
         logger.clear();
         events.clear();
 
-        if (MineTweakerAPI.server != null) {
-            events.onPlayerLoggedIn(LISTEN_LOGIN);
-            events.onPlayerLoggedOut(LISTEN_LOGOUT);
-        }
+        setLoginEvents();
         
         MineTweakerAPI.tweaker.rollback();
         ONROLLBACK.publish(new ReloadEvent());
         
+        loadCommands();
+
+        ONRELOAD.publish(new ReloadEvent());
+
+        MineTweakerAPI.tweaker.load();
+
+        if (MineTweakerAPI.server != null) {
+            platform.distributeScripts(MineTweakerAPI.tweaker.getScriptData());
+        }
+
+        ONPOSTRELOAD.publish(new ReloadEvent());
+
+    }
+
+    public static void setLoginEvents() {
+        if (MineTweakerAPI.server != null) {
+            events.onPlayerLoggedIn(LISTEN_LOGIN);
+            events.onPlayerLoggedOut(LISTEN_LOGOUT);
+        }
+    }
+
+    public static void loadCommands() {
         if (MineTweakerAPI.server != null) {
             if (!MineTweakerAPI.server.isCommandAdded("minetweaker")) {
                 server.addCommand("minetweaker", "", new String[]{"mt", "crafttweaker", "ct"}, new ICommandFunction() {
@@ -661,17 +680,6 @@ public class MineTweakerImplementationAPI {
                 }, null);
             }
         }
-
-        ONRELOAD.publish(new ReloadEvent());
-
-        MineTweakerAPI.tweaker.load();
-
-        if (MineTweakerAPI.server != null) {
-            platform.distributeScripts(MineTweakerAPI.tweaker.getScriptData());
-        }
-
-        ONPOSTRELOAD.publish(new ReloadEvent());
-
     }
 
     /**

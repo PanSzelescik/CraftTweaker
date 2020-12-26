@@ -28,7 +28,6 @@ import minetweaker.mc1710.network.*;
 import minetweaker.mc1710.oredict.MCOreDict;
 import minetweaker.mc1710.recipes.MCRecipeManager;
 import minetweaker.mc1710.server.MCServer;
-import minetweaker.mc1710.util.MineTweakerHacks;
 import minetweaker.mc1710.util.MineTweakerPlatformUtils;
 import minetweaker.mc1710.vanilla.MCVanilla;
 import minetweaker.runtime.*;
@@ -148,6 +147,11 @@ public class MineTweakerMod {
 		ItemBracketHandler.rebuildItemRegistry();
 		LiquidBracketHandler.rebuildLiquidRegistry();
 		MineTweakerAPI.logInfo("MineTweaker: Sucessfully built item registry");
+
+		MineTweakerAPI.logInfo("MineTweaker: Loading scripts");
+		IScriptProvider cascaded = new ScriptProviderCascade(scriptsIMC, scriptsGlobal);
+		MineTweakerImplementationAPI.setScriptProvider(cascaded);
+		MineTweakerImplementationAPI.reload();
 	}
 
 	@EventHandler
@@ -159,16 +163,9 @@ public class MineTweakerMod {
 			MineTweakerAPI.client = new MCClient();
 		}
 
-		File scriptsDir = new File(MineTweakerHacks.getWorldDirectory(ev.getServer()), "scripts");
-		if (!scriptsDir.exists()) {
-			scriptsDir.mkdir();
-		}
-
-		IScriptProvider scriptsLocal = new ScriptProviderDirectory(scriptsDir);
-		IScriptProvider cascaded = new ScriptProviderCascade(scriptsIMC, scriptsGlobal,scriptsLocal);
-
-		MineTweakerImplementationAPI.setScriptProvider(cascaded);
-		MineTweakerImplementationAPI.onServerStart(new MCServer(ev.getServer()));
+		MineTweakerAPI.server = new MCServer(ev.getServer());
+		MineTweakerImplementationAPI.setLoginEvents();
+		MineTweakerImplementationAPI.loadCommands();
 	}
 
 	@EventHandler
@@ -179,6 +176,5 @@ public class MineTweakerMod {
 	@EventHandler
 	public void onServerStopped(FMLServerStoppedEvent ev) {
 		MineTweakerImplementationAPI.onServerStop();
-		MineTweakerImplementationAPI.setScriptProvider(scriptsGlobal);
 	}
 }
